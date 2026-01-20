@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Results - Telescope</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <nav class="top-nav">
+    <div class="nav-brand">
+      <span class="logo">🔭</span>
+      <span class="brand-name">Telescope</span>
+    </div>
+    <div class="nav-links">
+      <a href="/">Home</a>
+      <a href="/upload.html">Upload</a>
+      <a href="/results.html" class="active">Results</a>
+    </div>
+  </nav>
+
+  <main class="container">
+    <header class="page-header">
+      <h1>Test Results</h1>
+      <p class="subtitle">View all uploaded test results</p>
+    </header>
+
+    <section class="section">
+      <div class="results-list" id="results-list">
+        <div class="loading">Loading results...</div>
+      </div>
+
+      <div class="no-results" id="no-results" hidden>
+        <div class="empty-icon">📭</div>
+        <p>No test results found</p>
+        <a href="/upload.html" class="upload-link">Upload your first test</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>Telescope by Cloudflare</p>
+  </footer>
+
+  <script>
+    const resultsList = document.getElementById('results-list');
+    const noResults = document.getElementById('no-results');
+
+    async function loadResults() {
+      try {
+        const response = await fetch('/api/results');
+        if (!response.ok) throw new Error('Failed to load results');
+        
+        const results = await response.json();
+        
+        if (results.length === 0) {
+          resultsList.hidden = true;
+          noResults.hidden = false;
+          return;
+        }
+
+        // Load config for each result
+        const resultsWithConfig = await Promise.all(
+          results.map(async (testId) => {
+            try {
+              const configResponse = await fetch(`/api/file/${testId}/config.json`);
+              if (!configResponse.ok) return null;
+              const config = await configResponse.json();
+              return { testId, config };
+            } catch {
+              return null;
+            }
+          })
+        );
+
+        const validResults = resultsWithConfig
+          .filter(r => r !== null)
+          .sort((a, b) => new Date(b.config.date) - new Date(a.config.date));
+
+        if (validResults.length === 0) {
+          resultsList.hidden = true;
+          noResults.hidden = false;
+          return;
+        }
+
+        renderResults(validResults);
+      } catch (error) {
+        resultsList.innerHTML = `<div class="error">Failed to load results: ${error.message}</div>`;
+      }
+    }
+
+    function renderResults(results) {
+      resultsList.innerHTML = results.map(({ testId, config }) => `
+        <a href="/results/${testId}/overview" class="result-card">
+          <div class="result-screenshot">
+            <img src="/api/results/${testId}/screenshot.png" alt="Screenshot" loading="lazy">
+          </div>
+          <div class="result-info">
+            <div class="result-url">${escapeHtml(config.url || 'Unknown URL')}</div>
+            <div class="result-meta">
+              <span class="result-browser">${escapeHtml(config.options?.browser || 'chrome')}</span>
+              <span class="result-date">${formatDate(config.date)}</span>
+            </div>
+            <div class="result-id">${escapeHtml(testId)}</div>
+          </div>
+        </a>
+      `).join('');
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function formatDate(dateStr) {
+      if (!dateStr) return '';
+      try {
+        return new Date(dateStr).toLocaleString();
+      } catch {
+        return dateStr;
+      }
+    }
+
+    loadResults();
+  </script>
+</body>
+</html>
