@@ -1,7 +1,7 @@
 import { unzipSync } from 'fflate';
 
 interface Env {
-  RESULTS_BUCKET: R2Bucket;
+  UNZIP_BUCKET: R2Bucket;
 }
 
 export const onRequestPost: PagesFunction<Env> = async (context) => {

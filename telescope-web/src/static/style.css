@@ -492,3 +492,29 @@ code {
     overflow-x: auto;
   }
 }
+
+
+/* Results section on upload page */
+.results-section {
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 2px solid var(--border);
+}
+/* Error card styling */
+.error-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid var(--error);
+  border-radius: 12px;
+}
+.error-card .error-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+.error-card .error-text {
+  color: var(--error);
+  text-align: center;
+}

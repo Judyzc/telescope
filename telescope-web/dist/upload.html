@@ -15,7 +15,6 @@
     <div class="nav-links">
       <a href="/">Home</a>
       <a href="/upload.html" class="active">Upload</a>
-      <a href="/results.html">Results</a>
     </div>
   </nav>
 
@@ -57,6 +56,26 @@
       </div>
     </section>
 
+    <section class="section results-section" id="results-section">
+      <h2>Latest Test Result</h2>
+      
+      <div class="loading" id="results-loading">Loading results...</div>
+      
+      <div class="no-results" id="no-results" hidden>
+        <div class="empty-icon">📭</div>
+        <p>No test results yet. Upload a ZIP to get started!</p>
+      </div>
+      
+      <div id="results-container" hidden>
+        <!-- Result will be dynamically inserted here -->
+      </div>
+      
+      <div class="error-card" id="results-error" hidden>
+        <div class="error-icon">⚠️</div>
+        <p class="error-text" id="results-error-text"></p>
+      </div>
+    </section>
+
     <section class="section">
       <h2>How to generate a ZIP</h2>
       <p>Run Telescope with the <code>--zip</code> flag to generate an uploadable ZIP file:</p>
@@ -71,118 +90,177 @@
     <p>Telescope by Cloudflare</p>
   </footer>
 
-  <script>
-    const uploadArea = document.getElementById('upload-area');
-    const fileInput = document.getElementById('file-input');
-    const uploadStatus = document.getElementById('upload-status');
-    const uploadSuccess = document.getElementById('upload-success');
-    const uploadError = document.getElementById('upload-error');
-    const statusText = document.getElementById('status-text');
-    const statusIcon = document.getElementById('status-icon');
-    const progressFill = document.getElementById('progress-fill');
-    const viewResultsBtn = document.getElementById('view-results-btn');
-    const errorText = document.getElementById('error-text');
-    const retryBtn = document.getElementById('retry-btn');
-
-    // Drag and drop handlers
-    uploadArea.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      uploadArea.classList.add('dragover');
-    });
-
-    uploadArea.addEventListener('dragleave', () => {
-      uploadArea.classList.remove('dragover');
-    });
-
-    uploadArea.addEventListener('drop', (e) => {
-      e.preventDefault();
-      uploadArea.classList.remove('dragover');
-      const files = e.dataTransfer.files;
-      if (files.length > 0 && files[0].name.endsWith('.zip')) {
-        handleUpload(files[0]);
-      } else {
-        showError('Please upload a ZIP file');
-      }
-    });
-
-    // File input handler
-    fileInput.addEventListener('change', (e) => {
-      if (e.target.files.length > 0) {
-        handleUpload(e.target.files[0]);
-      }
-    });
-
-    // Retry button
-    retryBtn.addEventListener('click', () => {
-      resetUpload();
-    });
-
-    function resetUpload() {
-      uploadArea.hidden = false;
-      uploadStatus.hidden = true;
-      uploadSuccess.hidden = true;
-      uploadError.hidden = true;
-      fileInput.value = '';
+<script>
+  const uploadArea = document.getElementById('upload-area');
+  const fileInput = document.getElementById('file-input');
+  const uploadStatus = document.getElementById('upload-status');
+  const uploadSuccess = document.getElementById('upload-success');
+  const uploadError = document.getElementById('upload-error');
+  const statusText = document.getElementById('status-text');
+  const errorText = document.getElementById('error-text');
+  const retryBtn = document.getElementById('retry-btn');
+  
+  // Results elements
+  const resultsLoading = document.getElementById('results-loading');
+  const noResults = document.getElementById('no-results');
+  const resultsContainer = document.getElementById('results-container');
+  const resultsError = document.getElementById('results-error');
+  const resultsErrorText = document.getElementById('results-error-text');
+  // Drag and drop handlers (keep existing code)
+  uploadArea.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    uploadArea.classList.add('dragover');
+  });
+  uploadArea.addEventListener('dragleave', () => {
+    uploadArea.classList.remove('dragover');
+  });
+  uploadArea.addEventListener('drop', (e) => {
+    e.preventDefault();
+    uploadArea.classList.remove('dragover');
+    const files = e.dataTransfer.files;
+    if (files.length > 0 && files[0].name.endsWith('.zip')) {
+      handleUpload(files[0]);
+    } else {
+      showError('Please upload a ZIP file');
     }
-
-    function showError(message) {
-      uploadArea.hidden = true;
-      uploadStatus.hidden = true;
-      uploadSuccess.hidden = true;
-      uploadError.hidden = false;
-      errorText.textContent = message;
+  });
+  fileInput.addEventListener('change', (e) => {
+    if (e.target.files.length > 0) {
+      handleUpload(e.target.files[0]);
     }
-
-    async function handleUpload(file) {
-      uploadArea.hidden = true;
-      uploadStatus.hidden = false;
-      uploadSuccess.hidden = true;
-      uploadError.hidden = true;
+  });
+  retryBtn.addEventListener('click', () => {
+    resetUpload();
+  });
+  function resetUpload() {
+    uploadArea.hidden = false;
+    uploadStatus.hidden = true;
+    uploadSuccess.hidden = true;
+    uploadError.hidden = true;
+    fileInput.value = '';
+  }
+  function showError(message) {
+    uploadArea.hidden = true;
+    uploadStatus.hidden = true;
+    uploadSuccess.hidden = true;
+    uploadError.hidden = false;
+    errorText.textContent = message;
+  }
+  async function handleUpload(file) {
+    uploadArea.hidden = true;
+    uploadStatus.hidden = false;
+    uploadSuccess.hidden = true;
+    uploadError.hidden = true;
+    
+    statusText.textContent = `Uploading ${file.name}...`;
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Upload failed');
+      }
+      const result = await response.json();
       
-      statusText.textContent = `Uploading ${file.name}...`;
-      progressFill.style.width = '0%';
-
-      try {
-        const formData = new FormData();
-        formData.append('file', file);
-
-        const response = await fetch('/api/upload', {
-          method: 'POST',
-          body: formData,
-        });
-
-        if (!response.ok) {
-          const error = await response.json();
-          throw new Error(error.error || 'Upload failed');
-        }
-
-        const result = await response.json();
-        
-        // Show success
-        uploadStatus.hidden = true;
-        uploadSuccess.hidden = false;
-        viewResultsBtn.href = `/results/${result.testId}/overview`;
-        
-      } catch (error) {
-        showError(error.message);
+      // Show success
+      uploadStatus.hidden = true;
+      uploadSuccess.hidden = false;
+      
+      // Load the results
+      await loadLatestResult();
+      
+      // Scroll to results
+      document.getElementById('results-section').scrollIntoView({ behavior: 'smooth' });
+      
+    } catch (error) {
+      showError(error.message);
+    }
+  }
+  // NEW FUNCTION: Load latest result from R2
+  async function loadLatestResult() {
+    resultsLoading.hidden = false;
+    noResults.hidden = true;
+    resultsContainer.hidden = true;
+    resultsError.hidden = true;
+    try {
+      // Get list of all test IDs
+      const response = await fetch('/api/list');
+      if (!response.ok) throw new Error('Failed to load results');
+      
+      const testIds = await response.json();
+      
+      if (!testIds || testIds.length === 0) {
+        resultsLoading.hidden = true;
+        noResults.hidden = false;
+        return;
       }
+      // Sort by date (most recent first) - testIds are like "2024-01-20-abc123"
+      testIds.sort().reverse();
+      const latestTestId = testIds[0];
+      // Try to fetch config.json
+      let config = null;
+      try {
+        const configResponse = await fetch(`/api/file/${latestTestId}/config.json`);
+        if (configResponse.ok) {
+          config = await configResponse.json();
+        }
+      } catch (e) {
+        // config.json is missing
+      }
+      // Display result
+      resultsLoading.hidden = true;
+      if (!config) {
+        // Show error: missing config.json
+        resultsError.hidden = false;
+        resultsErrorText.textContent = `config.json is missing for test: ${latestTestId}`;
+      } else {
+        // Show the result
+        resultsContainer.hidden = false;
+        renderResult(latestTestId, config);
+      }
+    } catch (error) {
+      resultsLoading.hidden = true;
+      resultsError.hidden = false;
+      resultsErrorText.textContent = `Failed to load results: ${error.message}`;
     }
-
-    // Simulate progress (since fetch doesn't give us upload progress easily)
-    let progressInterval;
-    function startProgress() {
-      let progress = 0;
-      progressInterval = setInterval(() => {
-        progress += Math.random() * 15;
-        if (progress > 90) progress = 90;
-        progressFill.style.width = `${progress}%`;
-      }, 200);
+  }
+  function renderResult(testId, config) {
+    // Simple layout: just show basic info
+    resultsContainer.innerHTML = `
+      <div class="result-card">
+        <div class="result-screenshot">
+          <img src="/api/file/${testId}/screenshot.png" alt="Screenshot" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22120%22%3E%3Crect fill=%22%23333%22 width=%22200%22 height=%22120%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 fill=%22%23999%22 text-anchor=%22middle%22 dy=%22.3em%22%3ENo Image%3C/text%3E%3C/svg%3E'">
+        </div>
+        <div class="result-info">
+          <div class="result-url">${escapeHtml(config.url || 'Unknown URL')}</div>
+          <div class="result-meta">
+            <span class="result-browser">${escapeHtml(config.options?.browser || 'chrome')}</span>
+            <span class="result-date">${formatDate(config.date)}</span>
+          </div>
+          <div class="result-id">${escapeHtml(testId)}</div>
+        </div>
+      </div>
+    `;
+  }
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+  function formatDate(dateStr) {
+    if (!dateStr) return '';
+    try {
+      return new Date(dateStr).toLocaleString();
+    } catch {
+      return dateStr;
     }
-
-    function stopProgress() {
-      clearInterval(progressInterval);
-      progressFill.style.width = '100%';
-    }
-  </script>
+  }
+  // Load results on page load
+  loadLatestResult();
+</script>
 </body>
 </html>

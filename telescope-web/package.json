@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "wrangler pages dev dist --r2=RESULTS_BUCKET --compatibility-date=2024-01-01",
+    "dev": "wrangler pages dev dist --r2=UNZIP_BUCKET --compatibility-date=2024-01-01",
     "build": "node build.js",
     "deploy": "npm run build && wrangler pages deploy dist",
     "preview": "npm run build && npm run dev"
