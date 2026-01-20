@@ -1,0 +1,31 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+<Layout title="Telescope - Browser Performance Testing">
+  <header class="hero">
+    <h1>Telescope</h1>
+    <p class="subtitle">A diagnostic, cross-browser performance testing agent</p>
+  </header>
+  <section class="section">
+    <h2>What it collects</h2>
+    <p>When you run the agent, it will load the page in the browser you chose and apply any special parameters you have provided. Each test generates:</p>
+    <ul class="list">
+      <li><code>console.json</code> - Console output from the page (warnings, JS errors, etc)</li>
+      <li><code>video.webm</code> - Video showing the page load progression</li>
+      <li><code>metrics.json</code> - Timing metrics collected during page load</li>
+      <li><code>pageload.har</code> - HAR file of the page load</li>
+      <li><code>resources.json</code> - Resource timing API data</li>
+      <li><code>screenshot.png</code> - Screenshot of the final page</li>
+      <li><code>/filmstrip</code> - Screenshots during page load for filmstrip view</li>
+    </ul>
+  </section>
+  <section class="section">
+    <h2>Quick Start</h2>
+    <div class="code-block">
+      <pre><code>npx @cloudflare/telescope -u https://example.com -b chrome --zip</code></pre>
+    </div>
+    <p>The ZIP file will be created in the <code>results/</code> directory. Upload it to view results.</p>
+    <a href="/upload" class="button">Upload Results</a>
+  </section>
+</Layout>
+---

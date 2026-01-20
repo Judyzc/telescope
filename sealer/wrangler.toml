@@ -1,0 +1,22 @@
+name = "sealer"
+main = "dist/_worker.js/index.js"
+compatibility_flags = [ "nodejs_compat" ]
+compatibility_date = "2024-01-20"
+
+# Local R2 bucket - for storing test results
+[[r2_buckets]]
+binding = "UNZIP_BUCKET"
+bucket_name = "telescope-unzip-local"
+
+# Local development settings
+[env.development]
+compatibility_date = "2024-01-20"
+
+# Production settings
+[env.production]
+compatibility_date = "2024-01-20"
+
+# Production R2 bucket (uncomment when deploying)
+# [[env.production.r2_buckets]]
+# binding = "UNZIP_BUCKET"
+# bucket_name = "telescope-unzip"

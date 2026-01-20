@@ -1,0 +1,23 @@
+{
+  "name": "sealer",
+  "type": "module",
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "cf": "astro build && wrangler pages dev dist --r2 UNZIP_BUCKET",
+    "preview": "wrangler pages dev dist --r2 UNZIP_BUCKET",
+    "deploy": "npm run build && wrangler pages deploy dist",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "@astrojs/cloudflare": "^12.6.12",
+    "astro": "^5.16.11",
+    "fflate": "^0.8.2"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260120.0",
+    "typescript": "^5.7.0",
+    "wrangler": "^4.59.2"
+  }
+}
