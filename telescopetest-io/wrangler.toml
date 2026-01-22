@@ -1,4 +1,4 @@
-name = "sealer"
+name = "telescopetest-io"
 main = "dist/_worker.js/index.js"
 compatibility_flags = [ "nodejs_compat" ]
 compatibility_date = "2024-09-23" 
