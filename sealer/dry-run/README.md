@@ -1,0 +1,1 @@
+This folder contains the built output assets for the worker "sealer" generated at 2026-01-27T21:34:29.023Z.

@@ -1,0 +1,21 @@
+{
+  "name": "sealer",
+  "type": "module",
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build && node fix-routes.mjs",
+    "preview": "npm run build && wrangler dev",
+    "astro": "astro",
+    "deploy": "npm run build && wrangler deploy",
+    "cf-typegen": "wrangler types"
+  },
+  "dependencies": {
+    "@astrojs/cloudflare": "^12.6.12",
+    "astro": "^5.16.15"
+  },
+  "devDependencies": {
+    "@types/node": "^25.0.10",
+    "wrangler": "^4.61.0"
+  }
+}
