@@ -6,6 +6,9 @@ This is the website for users to upload and view telescope ZIP results. This is 
 
 ```
 telescopetest-io/
+├── dist/                 # Worker-compatible output (created assets and worker script (if not using custom))
+├── └── astro/            # Bundled assets (like .css)
+│   └── _routes.json
 ├── package.json          # Astro + Cloudflare adapter dependencies
 ├── astro.config.mjs      # Astro config with Cloudflare adapter
 ├── wrangler.toml         # Workers config: binds worker/index.ts to Astro dist/
@@ -24,6 +27,25 @@ telescopetest-io/
 3. Worker calls `this.env.ASSETS.fetch(request)`
 4. Astro runtime routes to `src/pages/` and renders
 5. Response returns to user
+
+Build Process Flow
+
+1. Development (astro dev):
+   Astro Dev Server → Vite HMR → Local Preview
+2. Production Build (astro build):
+   Astro Build Process:
+   ├── Compile .astro files → HTML
+   ├── Bundle CSS → \_astro/\*.css
+   ├── Process images/assets
+   ├── Generate Worker script (if using SSR)
+   └── Create dist/ output (copied from /public)
+3. Deployment (wrangler deploy):
+   Wrangler:
+   ├── Upload assets from dist/ to Cloudflare
+   ├── Deploy Worker script
+   ├── Configure routing (custom domain/routes)
+   ├── Create DNS records (if custom domain)
+   └── Issue SSL certificates
 
 ## Deployment
 
