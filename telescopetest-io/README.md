@@ -24,6 +24,11 @@ telescopetest-io/
 └── public/               # Static assets
 ```
 
+## Migrations
+
+- To make migrations and database management simpler, we're using Prisma ORM with D1. This is a preview feature that Prisma has been building out since 2024: https://www.prisma.io/docs/orm/overview/databases/cloudflare-d1#migration-workflows.
+- I followed direct docs from Prisma for sestup: https://www.prisma.io/docs/guides/cloudflare-d1.
+
 ## Deployment
 
 This website shold only be deployed on Cloudflare workers on successful PR into @cloudflare/telescope. To run this deployment automatically, we have a GitHub workflow `.github/workflows/deploy.yml`:

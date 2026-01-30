@@ -10,10 +10,14 @@
   },
   "dependencies": {
     "@astrojs/cloudflare": "^12.6.12",
-    "astro": "^5.16.15"
+    "@prisma/adapter-d1": "^7.3.0",
+    "@prisma/client": "^7.3.0",
+    "astro": "^5.16.15",
+    "dotenv": "^17.2.3"
   },
   "devDependencies": {
     "@types/node": "^25.0.10",
+    "prisma": "^7.3.0",
     "wrangler": "^4.61.0"
   }
 }
