@@ -1,7 +1,10 @@
 import type { APIRoute } from 'astro';
+import { unzipSync } from 'fflate';
+
 import { TestConfig, TestSource } from '../../types/testConfig';
 import { TestRepository } from '../../lib/d1/repositories/test-repository';
 import { R2Client } from '../../lib/r2/r2-client';
+
 export const prerender = false;
 
 /**
@@ -13,7 +16,6 @@ export const prerender = false;
 async function getFilesFromZip(
   buffer: ArrayBuffer,
 ): Promise<Record<string, any>> {
-  const { unzipSync } = await import('fflate');
   const uint8Array = new Uint8Array(buffer);
   const unzipped = unzipSync(uint8Array);
   return unzipped;

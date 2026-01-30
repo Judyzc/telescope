@@ -6,11 +6,13 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro build && wrangler dev",
-    "stage": "astro build && wrangler deploy --env staging"
+    "cf-typegen": "wrangler types",
+    "deploy:staging": "astro build && wrangler deploy --env staging"
   },
   "dependencies": {
     "@astrojs/cloudflare": "^12.6.12",
-    "astro": "^5.16.15"
+    "astro": "^5.16.15",
+    "fflate": "^0.8.2"
   },
   "devDependencies": {
     "@types/node": "^25.0.10",
