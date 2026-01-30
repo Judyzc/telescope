@@ -6,7 +6,7 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro build && wrangler dev",
-    "deploy": "astro build && wrangler deploy"
+    "stage": "astro build && wrangler deploy --env staging"
   },
   "dependencies": {
     "@astrojs/cloudflare": "^12.6.12",
