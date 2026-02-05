@@ -23,6 +23,7 @@
       "binding": "TELESCOPE_DB",
       "database_name": "telescope-db",
       "database_id": "db0baebd-6b49-434b-bc31-fc9224ef4585",
+      "migrations_dir": "prisma/migrations",
     },
   ],
   "r2_buckets": [
