@@ -3,7 +3,11 @@ import path from 'node:path';
 import { getPrismaClient } from '@/lib/prisma/client';
 import { getTestRating } from '@/lib/repositories/testRepository';
 import { ContentRating } from '@/lib/types/tests';
-import { isValidTestId, isExpectedTelescopeFile } from '@/lib/utils/security';
+import {
+  isValidTestId,
+  isExpectedTelescopeFile,
+  toPosixPath,
+} from '@/lib/utils/security';
 
 /**
  * Serve files from R2 bucket
@@ -13,7 +17,7 @@ import { isValidTestId, isExpectedTelescopeFile } from '@/lib/utils/security';
  */
 export const GET: APIRoute = async (context: APIContext) => {
   const { testId, filename } = context.params;
-  const normalizedFilename = filename ? path.normalize(filename) : undefined;
+  const normalizedFilename = filename ? toPosixPath(filename) : undefined;
   if (!testId || !normalizedFilename) {
     return new Response('Missing testId or filename', { status: 400 });
   }

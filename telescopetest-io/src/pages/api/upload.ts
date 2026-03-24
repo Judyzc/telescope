@@ -5,7 +5,7 @@ import type { TestConfig } from '@/lib/types/tests';
 import path from 'node:path';
 import { unzipSync } from 'fflate';
 import { z } from 'zod';
-import { normalizeAndFilterZipFiles } from '@/lib/utils/security';
+import { normalizeAndFilterZipFiles, toPosixPath } from '@/lib/utils/security';
 
 import { TestSource, ContentRating } from '@/lib/types/tests';
 import { getPrismaClient } from '@/lib/prisma/client';
@@ -100,7 +100,7 @@ export const POST: APIRoute = async (context: APIContext) => {
     }
     // Find if some ' .../config.json' exists
     const configPath = files.find(
-      file => path.basename(file) === 'config.json',
+      file => path.posix.basename(toPosixPath(file)) === 'config.json',
     );
     if (!configPath) {
       return new Response(
@@ -112,7 +112,8 @@ export const POST: APIRoute = async (context: APIContext) => {
       );
     }
     // Strip the directory prefix from all files and filter to only valid, secure files
-    const dirName = path.dirname(configPath);
+    const normalizedConfigPath = toPosixPath(configPath);
+    const dirName = path.posix.dirname(normalizedConfigPath);
     const prefixToStrip = dirName === '.' ? '' : dirName + '/';
     // Parse filepaths and filter files in one function
     // IMPORTANT: silently drops all files not in expected list (such as index.html)
