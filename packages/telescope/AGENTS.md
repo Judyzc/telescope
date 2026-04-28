@@ -4,62 +4,63 @@
 
 `@cloudflare/telescope` is a TypeScript browser performance testing library and CLI built on Playwright. It launches real browsers (Chrome, Chrome Beta, Canary, Firefox, Safari, Edge), collects HAR files, Web Vitals, and performance metrics, and produces HTML reports.
 
-Key subdirectories:
+Key subdirectories (relative to `packages/telescope/`):
 
-- `packages/telescope/` — Core library and CLI (TypeScript, Playwright, Vitest)
-  - `src/` — TypeScript source compiled to `dist/`
-  - `__tests__/` — Vitest integration tests (excluded from tsconfig)
-  - `tests/` — Static test fixtures (HTML, CSS, images) used by integration tests
-  - `support/` — Browser support files (e.g., Firefox default `user.js` preferences)
-  - `processors/` — Standalone post-processing report generator (included in main tsconfig)
-- `packages/telescope-web/` — Separate Astro + Cloudflare Workers web app (fully excluded from root tooling)
+- `src/` — TypeScript source compiled to `dist/`
+  - `templates/` — EJS report templates (`list.ejs`, `test.ejs`)
+- `__tests__/` — Vitest integration tests (excluded from tsconfig); `helpers.ts` contains shared test utilities
+- `tests/` — Static HTML/CSS test fixtures served during integration tests (`delay/`, `duplicate-requests/`, `host-override/`, `sandbox/`)
+- `support/` — Browser support files
+  - `firefox/user.js` — Firefox default preferences
+  - `versioncheck.js` — Browser version check helper
+- `processors/` — Standalone post-processing report generator (included in main tsconfig)
+  - `generate.ts` — Entry point; run as `node dist/processors/generate.js <results-dir>`
+  - `templates/` — EJS templates for processor HTML output
 
 ---
 
-## Monorepo Structure
-
-This is an npm workspaces monorepo. `node_modules` is installed at the repo root and shared across all packages. Install dependencies from the root:
-
-```bash
-npm install
-```
-
-Commands can be run from the repo root (targeting a specific workspace) or from within each package directory.
-
 ## Build, Lint, and Test Commands
 
-### Run from repo root
+Commands below are run from `packages/telescope/`. To run from the repo root, use `npm run <script> -w packages/telescope`.
+
+### Build
 
 ```bash
-# All packages
-npm run build --workspaces
-npm run test --workspaces
-npm run lint --workspaces
-
-# Telescope package (shortcuts)
-npm run test:telescope           # build + vitest run
-npm run test:telescope:ci        # CI mode (Firefox only)
-npm run coverage:telescope       # vitest run --coverage
-
-# Specific package (explicit workspace flag)
-npm run build -w packages/telescope
-npm run test -w packages/telescope
-npm run lint -w packages/telescope
-
-npm run build -w packages/telescope-web
-npm run test -w packages/telescope-web
+npm run build          # tsc + copy templates to dist/
+npm run dev            # tsc --watch
 ```
 
-### Run the CLI from repo root
+**Tests require a build first.** Some tests invoke `node dist/src/cli.js` via `spawnSync`, so they test compiled output.
+
+### Lint
 
 ```bash
-npm run build -w packages/telescope
-npx . -u https://example.com
+npm run lint           # eslint .
+npm run lint:fix       # eslint . --fix
+npm run prettier       # npx prettier --write .
 ```
 
-The root `package.json` `bin` field points to `packages/telescope/dist/src/cli.js`. Build the telescope package first — `npx .` requires compiled output.
+### Test
 
-See `packages/telescope/AGENTS.md` and `packages/telescope-web/AGENTS.md` for the full list of per-package commands.
+```bash
+npm test               # build + vitest run
+npm run test:ci        # export CI=true; npm test
+npm run coverage       # vitest run --coverage
+```
+
+**Run a single test file** (build first):
+
+```bash
+npm run build && npx vitest run __tests__/cli.test.ts
+```
+
+**Run a single test by name:**
+
+```bash
+npm run build && npx vitest run __tests__/cli.test.ts -t "generates a Har file"
+```
+
+**Important:** `maxWorkers: 1` is required — tests launch real browsers and cannot run in parallel. Tests that call `launchTest()` or spawn the CLI directly need explicit timeouts (60000–120000ms). See `vitest.config.ts` for configuration.
 
 ---
 
@@ -296,8 +297,8 @@ Package versions for Playwright packages must match, or Playwright may install t
 
 ## Architecture Notes
 
-- **`packages/telescope-web/`** is a fully independent project — do not touch its files when working on the core library. It has its own `package.json` and is excluded from `packages/telescope/` tooling configs.
-- Core library commands can be run from the repo root (`npm run build -w packages/telescope`) or from within `packages/telescope/` directly.
+- **`../telescope-web/`** is a fully independent project — do not touch its files when working on the core library. It has its own `package.json` and is excluded from this package's tooling configs.
+- Commands can be run from this directory directly or from the repo root with `npm run <script> -w packages/telescope`.
 - **Processors** (`processors/generate.ts`) are compiled with the main build but run as a standalone script: `node dist/processors/generate.js <results-dir>`. Guarded with `if (process.argv[1] === __filename)`.
 - **Runtime path resolution**: `testRunner.ts` detects whether it is running from compiled `dist/` or source via `isCompiledDist = currentDir.includes('/dist/')` — preserve this logic when modifying path-dependent code.
 - **Template files** are copied post-`tsc` in the `build` script — if you add new `.ejs` templates under `src/templates/`, update the `build` script accordingly.
