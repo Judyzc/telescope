@@ -35,22 +35,27 @@ export const GET: APIRoute = async (context: APIContext) => {
   }
   const key = `${testId}/${normalizedFilename}`;
 
-  // Try public bucket first — SAFE files are copied here by the workflow, no rating check needed.
-  // Serve directly (no redirect) since fetch() calls can't follow cross-origin redirects (CORS).
+  if (isAiEnabled()) {
+    const rating = await checkTestRating(context, testId);
+    if (rating !== ContentRating.SAFE) {
+      return new Response('Test file not available', { status: 404 });
+    }
+  }
+
   const publicFile = hasPublicBucket()
-    ? await env.PUBLIC_RESULTS_BUCKET!.get(key).catch(() => null)
+    ? await env.PUBLIC_RESULTS_BUCKET!.get(key).catch(err => {
+      console.error(`[R2] public bucket get error for ${key}:`, err);
+      return null;
+    })
     : null;
 
   let file = publicFile;
 
   if (!file) {
-    if (isAiEnabled()) {
-      const rating = await checkTestRating(context, testId);
-      if (rating !== ContentRating.SAFE) {
-        return new Response('Test file not available', { status: 404 });
-      }
-    }
-    const privateFile = await env.RESULTS_BUCKET.get(key).catch(() => null);
+    const privateFile = await env.RESULTS_BUCKET!.get(key).catch(err => {
+      console.error(`[R2] private bucket get error for ${key}:`, err);
+      return null;
+    });
     if (!privateFile) return new Response('File not found', { status: 404 });
     file = privateFile;
   }
@@ -82,7 +87,7 @@ export const GET: APIRoute = async (context: APIContext) => {
       headers['Content-Disposition'] = `attachment; filename="${testId}.har"`;
     } else if (!['png', 'jpg', 'webm'].includes(ext || '')) {
       headers['Content-Disposition'] =
-        `attachment; filename="${normalizedFilename}"`;
+        `attachment; filename="${encodeURIComponent(normalizedFilename)}"`;
     }
     return new Response(file.body, { headers });
   } catch (error) {

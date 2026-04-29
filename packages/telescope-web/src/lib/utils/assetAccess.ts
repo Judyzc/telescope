@@ -4,6 +4,8 @@ import { getPrismaClient } from '@/lib/prisma/client';
 import { getTestRating } from '@/lib/repositories/testRepository';
 import { ContentRating } from '@/lib/types/tests';
 
+export const READY_SENTINEL = '.ready';
+
 export function isAiEnabled(): boolean {
   return env.ENABLE_AI_RATING === 'true';
 }
@@ -17,11 +19,11 @@ export function hasPublicBucket(): boolean {
   return !!env.PUBLIC_ASSETS_URL && !!env.PUBLIC_RESULTS_BUCKET;
 }
 
-// returns the CDN base URL if this test's files exist in the public bucket, empty string otherwise
-// uses config.json as check — it's always present
 export async function resolveAssetBase(testId: string): Promise<string> {
   if (!hasPublicBucket()) return '';
-  const obj = await env.PUBLIC_RESULTS_BUCKET!.head(`${testId}/config.json`);
+  const obj = await env.PUBLIC_RESULTS_BUCKET!.head(
+    `${testId}/${READY_SENTINEL}`,
+  );
   return obj ? env.PUBLIC_ASSETS_URL! : '';
 }
 
